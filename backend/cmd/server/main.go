@@ -8,7 +8,7 @@ import (
 	"syscall"
 	"time"
 
-	"backend/internal/server"
+	"marketplace/internal/server"
 )
 
 func main() {
