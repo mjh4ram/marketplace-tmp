@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package marketplace;
+
+option go_package = "marketplace/proto";
+
+// Common response messages used across different services
+// Note: Item-related messages are defined in item.proto
+
+// Error codes used across the service
+enum ErrorCode {
+  // System errors (1xxx)
+  ERROR_INTERNAL = 0;           // 1000: Unexpected internal server error
+  ERROR_NOT_IMPLEMENTED = 1;    // 1001: Feature not yet implemented
+  ERROR_SERVICE_UNAVAILABLE = 2; // 1002: Service temporarily unavailable
+
+  // Request errors (2xxx)
+  ERROR_INVALID_REQUEST = 3;     // 2000: Malformed or invalid request
+  ERROR_INVALID_CONTENT_TYPE = 4; // 2001: Unsupported content type
+  ERROR_VALIDATION = 5;          // 2002: Request validation failed
+  ERROR_UNAUTHORIZED = 6;        // 2003: Authentication required
+  ERROR_FORBIDDEN = 7;           // 2004: Insufficient permissions
+
+  // Resource errors (3xxx)
+  ERROR_NOT_FOUND = 8;          // 3000: Requested resource not found
+  ERROR_ALREADY_EXISTS = 9;      // 3001: Resource already exists
+  ERROR_RESOURCE_CONFLICT = 10;  // 3002: Resource state conflict
+}
+
+// Status response message
+message StatusResponse {
+  string status = 1;
+  string message = 2;
+  int64 timestamp = 3;
+}
+
+// Error response message
+message ErrorResponse {
+  ErrorCode code = 1;  // Using the enum instead of string
+  string message = 2;
+  map<string, string> details = 3;
+} 

@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package marketplace;
+
+option go_package = "marketplace/proto";
+
+import "marketplace.proto";  // Import the main proto file for common messages
+
+// Item represents a marketplace item
+message Item {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  double price = 4;
+  repeated string tags = 5;
+  int64 created_at = 6;
+  int64 updated_at = 7;
+}
+
+// ListItemsRequest represents the request for listing items
+message ListItemsRequest {
+  int32 page_size = 1;  // Number of items per page
+  int32 page_token = 2; // Page token for pagination
+  string filter = 3;    // Optional filter string
+  string sort_by = 4;   // Optional sort field
+  bool sort_desc = 5;   // Sort direction (true for descending)
+}
+
+// ListItemsResponse represents the response for listing items
+message ListItemsResponse {
+  repeated Item items = 1;
+  int32 total_count = 2;
+  int64 timestamp = 3;
+  string next_page_token = 4; // Token for the next page
+}
+
+// CreateItemRequest represents the request for creating an item
+message CreateItemRequest {
+  string name = 1;
+  string description = 2;
+  double price = 3;
+  repeated string tags = 4;
+}
+
+// CreateItemResponse represents the response for creating an item
+message CreateItemResponse {
+  Item item = 1;
+  StatusResponse status = 2;
+} 
