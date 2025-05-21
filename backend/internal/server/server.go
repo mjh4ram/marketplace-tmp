@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	"marketplace/internal/api/middleware"
 )
 
 type Server struct {
@@ -18,17 +20,52 @@ func New() *Server {
 		port = "8080"
 	}
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintln(w, "Hello from AWS App Runner-compatible Go server!")
-	})
+	server := &Server{}
 
-	s := &http.Server{
-		Addr:    ":" + port,
-		Handler: mux,
+	mux := http.NewServeMux()
+	server.registerRoutes(mux)
+
+	// Apply middleware
+	handler := middleware.Chain(
+		mux,
+		middleware.RecoveryMiddleware,
+		middleware.LoggingMiddleware,
+		middleware.CORSMiddleware,
+		middleware.ContentTypeMiddleware,
+	)
+
+	server.httpServer = &http.Server{
+		Addr:    fmt.Sprintf(":%s", port),
+		Handler: handler,
 	}
 
-	return &Server{httpServer: s}
+	return server
+}
+
+func (s *Server) registerRoutes(mux *http.ServeMux) {
+	// API routes
+	api := http.NewServeMux()
+
+	// v1 routes
+	v1 := http.NewServeMux()
+
+	itemsHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			middleware.ProtoMiddleware(s.HandleCreateItem)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})).ServeHTTP(w, r)
+		case http.MethodGet:
+			middleware.ProtoMiddleware(s.HandleListItems)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})).ServeHTTP(w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})
+	v1.Handle("/items", itemsHandler)
+
+	// Mount v1 under /api/v1
+	api.Handle("/v1/", http.StripPrefix("/v1", v1))
+
+	// Mount API routes under /api
+	mux.Handle("/api/", http.StripPrefix("/api", api))
 }
 
 func (s *Server) Start() error {
