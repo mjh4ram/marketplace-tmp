@@ -6,13 +6,7 @@ import (
 	"runtime/debug"
 	"time"
 
-	mpb "marketplace/proto"  // alias the proto package to avoid conflict
-)
-
-// Error codes from proto definitions
-const (
-	ErrorCodeInternalError     = "INTERNAL_ERROR"
-	ErrorCodeInvalidContentType = "INVALID_CONTENT_TYPE"
+	mpb "marketplace/proto" // alias the proto package to avoid conflict
 )
 
 // ResponseWriter is a wrapper around http.ResponseWriter that captures the status code
@@ -123,4 +117,4 @@ func Chain(handler http.Handler, middleware ...func(http.Handler) http.Handler) 
 		handler = middleware[i](handler)
 	}
 	return handler
-} 
+}
