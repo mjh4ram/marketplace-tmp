@@ -1,0 +1,20 @@
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Build artifacts
+marketplace-server
+*.pb.go
+
+# IDE
+.idea
+.vscode
+
+# Misc
+README.md
+*.log 

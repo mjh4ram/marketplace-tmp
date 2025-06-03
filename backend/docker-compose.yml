@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=marketplace
+      - DB_SSL_MODE=disable
+      - PORT=8080
+    depends_on:
+      db:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+    networks:
+      - marketplace-network
+
+  db:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=marketplace
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - marketplace-network
+
+  migrations:
+    image: postgres:15
+    volumes:
+      - ./migrations:/migrations
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      bash -c "
+        echo 'Waiting for database...' &&
+        until pg_isready -h db -p 5432; do sleep 1; done &&
+        echo 'Running all migrations...' &&
+        for f in /migrations/*.sql; do
+          echo 'Running $$f...' &&
+          PGPASSWORD=$$POSTGRES_PASSWORD psql -h db -U $$POSTGRES_USER -d $$POSTGRES_DB -f $$f
+        done &&
+        echo 'Migrations completed successfully'
+      "
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=marketplace
+    networks:
+      - marketplace-network
+
+volumes:
+  postgres_data:
+
+networks:
+  marketplace-network:
+    driver: bridge 

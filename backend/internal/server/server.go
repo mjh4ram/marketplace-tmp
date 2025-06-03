@@ -8,10 +8,12 @@ import (
 	"os"
 
 	"marketplace/internal/api/middleware"
+	"marketplace/internal/clients/repository"
 )
 
 type Server struct {
 	httpServer *http.Server
+	repo       *repository.Repository
 }
 
 func New() *Server {
@@ -22,10 +24,17 @@ func New() *Server {
 
 	server := &Server{}
 
+	// Setup repository
+	repo, err := repository.NewRepository()
+	if err != nil {
+		log.Fatalf("Failed to initialize repository: %v", err)
+	}
+	server.repo = repo
+
+	// Setup HTTP server
 	mux := http.NewServeMux()
 	server.registerRoutes(mux)
 
-	// Apply middleware
 	handler := middleware.Chain(
 		mux,
 		middleware.RecoveryMiddleware,
@@ -75,5 +84,17 @@ func (s *Server) Start() error {
 
 func (s *Server) Shutdown(ctx context.Context) error {
 	log.Println("Shutting down server...")
-	return s.httpServer.Shutdown(ctx)
+
+	// Close repository connection
+	if err := s.repo.Close(); err != nil {
+		log.Printf("Error closing repository connection: %v", err)
+	}
+
+	// Close HTTP server
+	if err := s.httpServer.Shutdown(ctx); err != nil {
+		log.Printf("Error shutting down HTTP server: %v", err)
+		return err
+	}
+
+	return nil
 }

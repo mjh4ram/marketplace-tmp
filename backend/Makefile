@@ -15,10 +15,17 @@ PROTO_DIR=proto
 GO_OUT_DIR=proto
 GO_OPTIONS=paths=source_relative
 
+# Docker parameters
+DOCKER_COMPOSE=docker compose
+DOCKER_BUILD=$(DOCKER_COMPOSE) build
+DOCKER_UP=$(DOCKER_COMPOSE) up
+DOCKER_DOWN=$(DOCKER_COMPOSE) down
+DOCKER_LOGS=$(DOCKER_COMPOSE) logs
+
 # Ensure GOBIN is in PATH
 export PATH := $(GOBIN):$(PATH)
 
-.PHONY: proto-gen clean-proto install-proto-deps check-proto-deps build run dev clean help
+.PHONY: proto-gen clean-proto install-proto-deps check-proto-deps build run dev clean help docker-build docker-up docker-up-build docker-down docker-down-clean docker-logs docker-logs-follow docker-migrate docker-reset
 
 # Check if required protoc plugins are installed
 check-proto-deps:
@@ -76,6 +83,42 @@ clean-proto:
 	@echo "Cleaning generated proto files..."
 	rm -f $(GO_OUT_DIR)/*.pb.go
 
+# Docker commands
+docker-build:
+	@echo "Building Docker containers..."
+	$(DOCKER_BUILD)
+
+docker-up:
+	@echo "Starting Docker containers..."
+	$(DOCKER_UP)
+
+docker-up-build:
+	@echo "Building and starting Docker containers..."
+	$(DOCKER_UP) --build
+
+docker-down:
+	@echo "Stopping Docker containers..."
+	$(DOCKER_DOWN)
+
+docker-down-clean:
+	@echo "Stopping Docker containers and removing volumes..."
+	$(DOCKER_DOWN) -v
+
+docker-logs:
+	@echo "Showing Docker container logs..."
+	$(DOCKER_LOGS)
+
+docker-logs-follow:
+	@echo "Following Docker container logs..."
+	$(DOCKER_LOGS) -f
+
+docker-migrate:
+	@echo "Running database migrations..."
+	$(DOCKER_COMPOSE) up migrations
+
+docker-reset: docker-down-clean docker-up-build
+	@echo "Reset complete: Docker containers rebuilt and started fresh"
+
 # Help command
 help:
 	@echo "Available commands:"
@@ -87,6 +130,18 @@ help:
 	@echo "  make clean-proto     - Remove generated proto files"
 	@echo "  make install-proto-deps - Install required protoc plugins"
 	@echo "  make check-proto-deps - Check if required protoc plugins are installed"
+	@echo ""
+	@echo "Docker commands:"
+	@echo "  make docker-build    - Build Docker containers"
+	@echo "  make docker-up       - Start Docker containers"
+	@echo "  make docker-up-build - Build and start Docker containers"
+	@echo "  make docker-down     - Stop Docker containers"
+	@echo "  make docker-down-clean - Stop containers and remove volumes"
+	@echo "  make docker-logs     - Show container logs"
+	@echo "  make docker-logs-follow - Follow container logs"
+	@echo "  make docker-migrate  - Run database migrations"
+	@echo "  make docker-reset    - Reset everything (stop, clean, rebuild)"
+	@echo ""
 	@echo "  make help            - Show this help message"
 
 .DEFAULT_GOAL := help 

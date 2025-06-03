@@ -227,7 +227,73 @@ export const api = {
 
 ## 백엔드 개발
 
-### 개발 환경 설정
+### Docker로 실행하기
+
+#### 필수 요구사항
+- Docker Desktop이 설치되어 있어야 합니다. (https://www.docker.com/products/docker-desktop)
+- Make가 설치되어 있어야 합니다.
+
+#### 실행 방법
+1. 터미널에서 backend 디렉토리로 이동합니다.
+   ```bash
+   cd backend
+   ```
+
+2. Makefile을 사용하여 Docker 환경을 관리할 수 있습니다:
+
+   ```bash
+   # 모든 서비스 빌드 및 실행 (최초 실행 시)
+   make docker-up-build
+
+   # 또는 단계별로 실행
+   make docker-build  # 컨테이너 빌드
+   make docker-up     # 컨테이너 실행
+   ```
+
+   - 최초 실행 시, PostgreSQL 데이터베이스와 마이그레이션(테이블 생성), Go 서버가 자동으로 실행됩니다.
+   - 마이그레이션은 `migrations/` 디렉토리의 SQL 파일들을 순서대로 실행하여 테이블과 인덱스를 생성합니다.
+
+#### 유용한 Docker 명령어
+```bash
+# 컨테이너 중지
+make docker-down
+
+# 컨테이너 중지 및 볼륨 삭제 (데이터베이스 초기화)
+make docker-down-clean
+
+# 로그 확인
+make docker-logs
+make docker-logs-follow  # 실시간 로그 확인
+
+# 마이그레이션만 실행
+make docker-migrate
+
+# 모든 것을 초기화하고 다시 시작
+make docker-reset
+```
+
+#### 포트 충돌 해결
+- 기본적으로 백엔드 서버는 호스트의 8080 포트를 사용합니다.
+- 만약 `address already in use` 에러가 발생하면, 다른 프로세스가 8080 포트를 사용 중일 수 있습니다.
+- 해결 방법:
+  1. 포트를 사용 중인 프로세스 확인:
+     ```bash
+     # macOS/Linux
+     lsof -i :8080
+     # Windows
+     netstat -ano | findstr :8080
+     ```
+  2. 해당 프로세스 종료 또는
+  3. `docker-compose.yml` 파일에서 포트 매핑을 다른 포트로 변경
+
+#### 데이터베이스 초기화
+데이터베이스를 완전히 초기화하고 싶을 때:
+```bash
+make docker-down-clean  # 모든 컨테이너와 볼륨 삭제
+make docker-up-build   # 새로 빌드하고 시작
+```
+
+### 개발 환경 설정 (로컬에서 직접 실행)
 1. Go 설치
 macOS의 경우:
 ```bash
