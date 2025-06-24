@@ -15,7 +15,10 @@
     "next": "15.3.2",
     "protobufjs": "^7.2.6",
     "grpc-web": "^1.4.2",
-    "google-protobuf": "^3.21.2"
+    "google-protobuf": "^3.21.2",
+    "@heroicons/react": "^2.0.18",
+    "clsx": "^2.0.0",
+    "tailwind-merge": "^2.2.0"
   },
   "devDependencies": {
     "typescript": "^5",
